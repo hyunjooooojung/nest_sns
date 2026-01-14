@@ -1,42 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { NotFoundException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { PostsModel } from './entities/posts.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
-export interface PostModel {
-    id: number;
-    author: string;
-    title: string;
-    content: string;
-    likeCount: number;
-    commentCount: number;
-  }
-  
-  export let posts: PostModel[] = [
-    {
-      id: 1,
-      author: 'newjeans_official',
-      title: '뉴진스 민지',
-      content: '메이크업 고치고 있는 민지',
-      likeCount: 1000,
-      commentCount: 10000,
-    },
-    {
-      id: 2,
-      author: 'newjeans_official',
-      title: '뉴진스 민지',
-      content: '메이크업 고치고 있는 민지',
-      likeCount: 1000,
-      commentCount: 10000,
-    },
-  ]
 
 @Injectable()
 export class PostsService {
-    getAllPosts(): PostModel[] {
-        return posts;
+    constructor(
+        @InjectRepository(PostsModel)
+        private readonly postsRepository: Repository<PostsModel>
+    ) {}
+
+    async getAllPosts(): Promise<PostsModel[]> {
+        return await this.postsRepository.find();
     }
 
-    getPostById(id: number): PostModel {
-        const post = posts.find(post => post.id === id);
+    async getPostById(id: number): Promise<PostsModel> {
+        const post = await this.postsRepository.findOne({ where: { id } });
 
         if (!post) {
             throw new NotFoundException('Post not found');
@@ -44,73 +25,56 @@ export class PostsService {
         return post;
     }
 
-    createPost(
+    async createPost(
         author: string,
         title: string,
         content: string,
         likeCount: number,
         commentCount: number,
-    ): PostModel {
-        const newPost: PostModel = {
-            id: posts[posts.length - 1].id + 1,
-            author: author,
-            title: title,
-            content: content,
-            likeCount: likeCount,
-            commentCount: commentCount,
-          }
-          posts.push(newPost);
-          return newPost;
+    ): Promise<PostsModel> {
+        const newPost = this.postsRepository.create({
+            author,
+            title,
+            content,
+            likeCount,
+            commentCount,
+        });
+        return this.postsRepository.save(newPost);
     }
 
-    updatePost(
+    async updatePost(
         id: number,
         author: string,
         title: string,
         content: string,
-    ): PostModel {
-        const post = posts.find(post => post.id === id);
+    ): Promise<PostsModel> {
+        const post = await this.postsRepository.findOne({ where: { id } });
         if (!post) {
         throw new NotFoundException('Post not found');
         }
-        post.author = author;
-        post.title = title;
-        post.content = content;
-        
-        posts = posts.map(prevPost => prevPost.id === id ? post: prevPost);
+        await this.postsRepository.update(id, { author, title, content });
         return post;
     }
 
-    patchPost(
+    async patchPost(
         id: number,
         author: string | undefined,
         title: string | undefined,
         content: string | undefined,
-    ): PostModel {
-        const post = posts.find(post => post.id === id);
+    ): Promise<PostsModel> {
+        const post = await this.postsRepository.findOne({ where: { id } });
         if (!post) {
-        throw new NotFoundException('Post not found');
+            throw new NotFoundException('Post not found');
         }
-        if (author) {
-        post.author = author;
-        }
-        if (title) {
-        post.title = title;
-        }
-        if (content) {
-        post.content = content;
-        }
-        posts = posts.map(prevPost => prevPost.id === id ? post: prevPost);
-        
+        await this.postsRepository.update(id, { author, title, content });
         return post;
     }
 
-    deletePost(id: number): void {
-        const post = posts.find(post => post.id === id);
+    async deletePost(id: number): Promise<void> {
+        const post = await this.postsRepository.findOne({ where: { id } });
         if (!post) {
         throw new NotFoundException('Post not found');
         }
-        posts = posts.filter(prevPost => prevPost.id !== id);
-        return;
+        await this.postsRepository.delete(id);
     }
 }

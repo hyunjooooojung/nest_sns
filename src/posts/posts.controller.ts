@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Delete,Param, Patch, Post, Put } from '@nestjs/common';
 import { PostsService } from './posts.service';
+import { PostsModel } from './entities/posts.entity';
 
 
 @Controller('posts')
@@ -17,14 +18,14 @@ export class PostsController {
   }
 
   @Post()
-  createPost(
+  async createPost(
     @Body('author') author: string, 
     @Body('title') title: string, 
     @Body('content') content: string,
     @Body('likeCount') likeCount: number = 0,
     @Body('commentCount') commentCount: number = 0,
-  ) {
-    return this.postsService.createPost(
+  ): Promise<PostsModel> {
+    return await this.postsService.createPost(
       author, 
       title, 
       content, 
@@ -64,7 +65,7 @@ export class PostsController {
   }
 
   @Delete(':id')
-  deletePost(@Param('id') id: string): void {
+  async deletePost(@Param('id') id: string): Promise<void> {
     return this.postsService.deletePost(
       parseInt(id),
     );
