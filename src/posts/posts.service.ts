@@ -39,7 +39,7 @@ export class PostsService {
             likeCount,
             commentCount,
         });
-        return this.postsRepository.save(newPost);
+        return await this.postsRepository.save(newPost);
     }
 
     async updatePost(
