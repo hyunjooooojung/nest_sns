@@ -1,5 +1,4 @@
 import { Body, Controller, Get, Delete,Param, Patch, Post, Put } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
 import { PostsService } from './posts.service';
 
 
