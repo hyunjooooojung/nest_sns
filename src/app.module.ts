@@ -4,6 +4,8 @@ import { AppService } from './app.service';
 import { PostsModule } from './posts/posts.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsModel } from './posts/entities/posts.entity';
+import { UsersModel } from './users/entities/users.entity';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -17,9 +19,11 @@ import { PostsModel } from './posts/entities/posts.entity';
       database: 'nestjs_sns',
       entities: [
         PostsModel,
+        UsersModel,
       ],
       synchronize: true, // development 환경에서만 사용, production 환경에서는 false로 설정
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
