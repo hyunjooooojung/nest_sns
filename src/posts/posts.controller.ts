@@ -8,7 +8,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPosts(){
+  getPosts(): Promise<PostsModel[]> {
     return this.postsService.getAllPosts();
   }
 
@@ -19,14 +19,14 @@ export class PostsController {
 
   @Post()
   async createPost(
-    @Body('author') author: string, 
+    @Body('authorId') authorId: number, 
     @Body('title') title: string, 
     @Body('content') content: string,
     @Body('likeCount') likeCount: number = 0,
     @Body('commentCount') commentCount: number = 0,
   ): Promise<PostsModel> {
     return await this.postsService.createPost(
-      author, 
+      authorId, 
       title, 
       content, 
       likeCount, 
@@ -37,13 +37,13 @@ export class PostsController {
   @Put(':id')
   updatePost(
     @Param('id') id: string,
-    @Body('author') author: string,
+    @Body('authorId') authorId: number,
     @Body('title') title: string,
     @Body('content') content: string,
   ) {
     return this.postsService.updatePost(
       parseInt(id), 
-      author, 
+      authorId, 
       title, 
       content,
     );
@@ -52,13 +52,13 @@ export class PostsController {
   @Patch(':id')
   patchPost(
     @Param('id') id: string,
-    @Body('author') author: string | undefined,
+    @Body('authorId') authorId: number | undefined,
     @Body('title') title: string | undefined,
     @Body('content') content: string | undefined,
   ) {
     return this.postsService.patchPost(
       parseInt(id), 
-      author, 
+      authorId, 
       title, 
       content,
     );
