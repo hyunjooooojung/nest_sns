@@ -7,9 +7,11 @@ import { PostsModel } from './posts/entities/posts.entity';
 import { UsersModel } from './users/entities/users.entity';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
     PostsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
