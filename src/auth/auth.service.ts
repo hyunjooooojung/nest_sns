@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersModel } from 'src/users/entities/users.entity';
-import { JWT_SECRET } from './const/auth.const';
-
+import { HASH_ROUNDS, JWT_SECRET } from './const/auth.const';
+import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class AuthService {
     /**
@@ -33,6 +34,7 @@ export class AuthService {
 
     constructor(
         private readonly jwtService: JwtService,
+        private readonly usersService: UsersService,
     ) {}
 
     /**
@@ -62,5 +64,48 @@ export class AuthService {
             accessToken: this.signToken(user, false),
             refreshToken: this.signToken(user, true),
         }
+    }
+
+    async authenticateWithEmailAndPassword(user: Pick<UsersModel, 'email' | 'password'>) {
+        /**
+         * 1. 사용자가 존재하는지 확인(email)
+         * 2. 비밀번호가 맞는지 확인
+         * 3. 모두 통과되면 찾은 사용자 정보 반환
+         */
+        const foundUser = await this.usersService.findUserByEmail(user.email);
+        if(!foundUser) {
+            throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
+        }
+
+        const validatePassword  = await bcrypt.compare(user.password, foundUser.password);
+        if(!validatePassword) {
+            throw new UnauthorizedException('비밀번호가 맞지 않습니다.');
+        }
+
+        return foundUser;
+    }
+
+    async loginWIthEmail(user: Pick<UsersModel, 'email' | 'password'>) {
+        const foundUser = await this.authenticateWithEmailAndPassword(user);
+        
+        return this.loginUser(foundUser);
+    }
+
+    async registerWithEmail(user: Pick<UsersModel, 'nickname' | 'email' | 'password'>) {
+        // npmjs.com/package/bcrypt 참고
+        const hash = await bcrypt.hash(
+            user.password, 
+            HASH_ROUNDS
+        );    
+
+        const newUser = await this.usersService.createUser({
+            ...user,
+            password: hash,
+        });
+
+        return this.loginUser({
+            email: newUser.email,
+            id: newUser.id,
+        });
     }
 }
