@@ -143,4 +143,26 @@ export class AuthService {
         }
         return { email: splitToken[0], password: splitToken[1] };
     }
+
+    // 토큰 검증
+    verifyToken(token: string){
+        return this.jwtService.verify(token, {
+            secret: JWT_SECRET,
+        });
+    }
+
+    rotateToken(token: string, isRefreshToken: boolean){
+        const decoded = this.jwtService.verify(token, {
+            secret: JWT_SECRET,
+        });
+
+        if(decoded.type !== 'refresh'){
+            throw new UnauthorizedException('토큰 재발급은 Refresh Token만 가능합니다.');
+        }
+
+        return this.signToken({
+            ...decoded,
+        }, isRefreshToken);
+    }
+
 }
