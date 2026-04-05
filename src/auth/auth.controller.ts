@@ -1,5 +1,6 @@
 import { Body, Controller, Headers, Post } from '@nestjs/common'; // Headers는 token/access, token/refresh에서 사용
 import { AuthService } from './auth.service';
+import { MaxLengthPipe, MinLengthPipe, PasswordPipe } from './pipe/password.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -62,12 +63,14 @@ export class AuthController {
 
   @Post('register')
   registerWithEmail(
-    @Body() body: { nickname: string, email: string, password: string },
-  ){
+    @Body('nickname') nickname: string,
+    @Body('email') email: string,
+    @Body('password', new MaxLengthPipe(20, '비밀번호'), new MinLengthPipe(8, '비밀번호')) password: string,
+  ) {
     return this.authService.registerWithEmail({
-      nickname: body.nickname,
-      email: body.email,
-      password: body.password,
+      nickname,
+      email,
+      password,
     });
   }
 }

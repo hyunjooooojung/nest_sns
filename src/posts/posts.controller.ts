@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Delete,Param, Patch, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Delete,Param, Patch, Post, Put, ParseIntPipe } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities/posts.entity';
 
@@ -13,8 +13,8 @@ export class PostsController {
   }
 
   @Get(':id')
-  getPost(@Param('id') id: string) {
-    return this.postsService.getPostById(parseInt(id));
+  getPost(@Param('id', ParseIntPipe) id: number) {
+    return this.postsService.getPostById(id);
   }
 
   @Post()
@@ -22,15 +22,11 @@ export class PostsController {
     @Body('authorId') authorId: number, 
     @Body('title') title: string, 
     @Body('content') content: string,
-    @Body('likeCount') likeCount: number = 0,
-    @Body('commentCount') commentCount: number = 0,
   ): Promise<PostsModel> {
     return await this.postsService.createPost(
       authorId, 
       title, 
-      content, 
-      likeCount, 
-      commentCount,
+      content,
     );
   }
 

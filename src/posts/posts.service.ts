@@ -35,15 +35,15 @@ export class PostsService {
         authorId: number,
         title: string,
         content: string,
-        likeCount: number,
-        commentCount: number,
+        likeCount?: number,
+        commentCount?: number,
     ): Promise<PostsModel> {
         const post = this.postsRepository.create({
             author: { id: authorId },
             title,
             content,
-            likeCount,
-            commentCount,
+            likeCount: likeCount ?? 0,
+            commentCount: commentCount ?? 0,
         });
         return await this.postsRepository.save(post);
     }
