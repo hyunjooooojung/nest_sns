@@ -1,12 +1,15 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common'; // Headers는 token/access, token/refresh에서 사용
+import { Body, Controller, Headers, Post, Request, UseGuards } from '@nestjs/common'; // Headers는 token/access, token/refresh에서 사용
 import { AuthService } from './auth.service';
 import { MaxLengthPipe, MinLengthPipe, PasswordPipe } from './pipe/password.pipe';
+import { BasicTokenGuard } from './guard/basic-token.guard';
+import { RefreshTokenGuard } from './guard/bearer-token.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('token/access')
+  @UseGuards(RefreshTokenGuard)
   rotateAccessToken(
     @Headers('authorization') rawToken: string) {
       const token = this.authService.extractTokenFromHeader(rawToken, true);
@@ -18,6 +21,7 @@ export class AuthController {
     }
   
   @Post('token/refresh')
+  @UseGuards(RefreshTokenGuard)
   rotateRefreshToken(
     @Headers('authorization') rawToken: string) {
       const token = this.authService.extractTokenFromHeader(rawToken, true);
@@ -52,8 +56,10 @@ export class AuthController {
    *    - URL에 자격증명이 노출될 위험 없음
    */
   @Post('login')
+  @UseGuards(BasicTokenGuard)
   loginWithEmail(
     @Body() body: { email: string, password: string },
+    @Request() request: Request,
   ){
     return this.authService.loginWIthEmail({
       email: body.email,
