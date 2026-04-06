@@ -56,10 +56,8 @@ export class AuthController {
    *    - URL에 자격증명이 노출될 위험 없음
    */
   @Post('login')
-  @UseGuards(BasicTokenGuard)
   loginWithEmail(
     @Body() body: { email: string, password: string },
-    @Request() request: Request,
   ){
     return this.authService.loginWIthEmail({
       email: body.email,
