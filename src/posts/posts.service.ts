@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersModel } from 'src/users/entities/users.entity';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 
 @Injectable()
@@ -33,17 +35,13 @@ export class PostsService {
 
     async createPost(
         authorId: number,
-        title: string,
-        content: string,
-        likeCount?: number,
-        commentCount?: number,
+        postDto: CreatePostDto
     ): Promise<PostsModel> {
         const post = this.postsRepository.create({
             author: { id: authorId },
-            title,
-            content,
-            likeCount: likeCount ?? 0,
-            commentCount: commentCount ?? 0,
+            ...postDto,
+            likeCount: 0,
+            commentCount: 0,
         });
         return await this.postsRepository.save(post);
     }
@@ -51,8 +49,7 @@ export class PostsService {
     async updatePost(
         id: number,
         authorId: number,
-        title: string,
-        content: string,
+        body: UpdatePostDto
     ): Promise<PostsModel> {
         const post = await this.postsRepository.findOne({ where: { id } });
 
@@ -62,8 +59,7 @@ export class PostsService {
 
         await this.postsRepository.update(id, {
             author: { id: authorId },
-            title,
-            content,
+            ...body,
         });
         return post;
     }
@@ -71,14 +67,13 @@ export class PostsService {
     async patchPost(
         id: number,
         authorId: number | undefined,
-        title: string | undefined,
-        content: string | undefined,
+        body: UpdatePostDto
     ): Promise<PostsModel> {
         const post = await this.postsRepository.findOne({ where: { id } });
         if (!post) {
             throw new NotFoundException('Post not found');
         }
-        await this.postsRepository.update(id, { author: { id: authorId ?? post.author.id }, title, content });
+        await this.postsRepository.update(id, { author: { id: authorId ?? post.author.id }, ...body });
         return post;
     }
 

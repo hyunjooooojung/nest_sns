@@ -4,6 +4,8 @@ import { PostsModel } from './entities/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { UsersModel } from 'src/users/entities/users.entity';
 import { User } from 'src/users/decorator/user.decorator';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 
 @Controller('posts')
@@ -24,28 +26,28 @@ export class PostsController {
   @UseGuards(AccessTokenGuard)
   async createPost(
     @User('id') userId: number,
-    @Body('title') title: string, 
-    @Body('content') content: string,
+    @Body() body: CreatePostDto
+    // @Body('title') title: string, 
+    // @Body('content') content: string,
   ): Promise<PostsModel> {
     return await this.postsService.createPost(
       userId,
-      title,
-      content,
+      body,
     );
   }
 
-  @Put(':id')
+  @Patch(':id')
   updatePost(
     @Param('id') id: string,
     @Body('authorId') authorId: number,
-    @Body('title') title: string,
-    @Body('content') content: string,
+    @Body() body: UpdatePostDto
+    // @Body('title') title: string,
+    // @Body('content') content: string,
   ) {
     return this.postsService.updatePost(
       parseInt(id), 
       authorId, 
-      title, 
-      content,
+      body,
     );
   }
 
@@ -53,14 +55,14 @@ export class PostsController {
   patchPost(
     @Param('id') id: string,
     @Body('authorId') authorId: number | undefined,
-    @Body('title') title: string | undefined,
-    @Body('content') content: string | undefined,
+    @Body() body: UpdatePostDto
+    // @Body('title') title: string | undefined,
+    // @Body('content') content: string | undefined,
   ) {
     return this.postsService.patchPost(
       parseInt(id), 
       authorId, 
-      title, 
-      content,
+      body,
     );
   }
 
