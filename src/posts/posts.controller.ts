@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { User } from 'src/users/decorator/user.decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginatePostDto } from './dto/paginate-post.dto';
+import { UsersModel } from 'src/users/entities/users.entity';
 
 
 @Controller('posts')
@@ -12,8 +14,16 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPosts(): Promise<PostsModel[]> {
-    return this.postsService.getAllPosts();
+  getPosts(
+    @Query() query: PaginatePostDto,
+  ): Promise<{data: PostsModel[]}> {
+    return this.postsService.paginatePosts(query);
+  }
+
+  @Post('random')
+  @UseGuards(AccessTokenGuard)
+  async postPostsRandom(@User() user: UsersModel){
+    return await this.postsService.generatePosts(user.id);
   }
 
   @Get(':id')
