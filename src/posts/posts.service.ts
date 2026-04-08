@@ -23,6 +23,31 @@ export class PostsService {
     }
 
     async paginatePosts(query: PaginatePostDto){
+        if(query.page) {
+            return this.pagePaginatePosts(query);
+        } else {
+            return this.cursorPaginatePosts(query);
+        }
+    }
+
+    async pagePaginatePosts(query: PaginatePostDto){
+        /**
+         * Response
+         * data: Data[]
+         * total: number
+         */
+        const [posts, count] = await this.postsRepository.findAndCount({
+            order: { createdAt: query.order__createdAt ?? 'ASC' },
+            take: query.take,
+            skip: query.take * (query.page! - 1),
+        });
+        return {
+            data: posts,
+            total: count,
+        }
+    }
+
+    async cursorPaginatePosts(query: PaginatePostDto){
 
         const where: FindOptionsWhere<PostsModel> = {};
         if(query.where__id_less_than) {
