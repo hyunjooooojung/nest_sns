@@ -1,8 +1,7 @@
-import { Body, Controller, Get, Delete,Param, Patch, Post, Put, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
-import { UsersModel } from 'src/users/entities/users.entity';
 import { User } from 'src/users/decorator/user.decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
