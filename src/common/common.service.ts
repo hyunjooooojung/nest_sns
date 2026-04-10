@@ -3,23 +3,40 @@ import { BasePaginationDto } from './dto/base-pagination.dto';
 import { FindManyOptions, FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 import { BaseModel } from './entity/base.entity';
 import { FILTER_MAPPER } from './const/filter-mapper.const';
+import { HOST, PROTOCOL, PORT } from './const/env.const';
+
+export interface PagePaginationResult<T> {
+    data: T[];
+    total: number;
+}
+
+export interface CursorPaginationResult<T> {
+    data: T[];
+    cursor: {
+        after: number | null;
+    };
+    count: number;
+    next: string | null;
+}
+
+export type PaginationResult<T> = PagePaginationResult<T> | CursorPaginationResult<T>;
 
 @Injectable()
 export class CommonService {
-    paginate<T extends BaseModel>(
+    async paginate<T extends BaseModel>(
         dto: BasePaginationDto,
         repository: Repository<T>,
         overrideFindOptions: FindManyOptions<T> = {}, 
         path: string,
-    ){
+    ): Promise<PaginationResult<T>>{
         if(dto.page) {
-            return this.pagePaginate(
+            return await this.pagePaginate(
                 dto, 
                 repository, 
                 overrideFindOptions,
             );
         }else {
-            return this.cursorPaginate(
+            return await this.cursorPaginate(
                 dto, 
                 repository,
                 overrideFindOptions,
@@ -32,8 +49,18 @@ export class CommonService {
         dto: BasePaginationDto,
         repository: Repository<T>,
         overrideFindOptions: FindManyOptions<T> = {}, 
-    ){
-        
+    ): Promise<PagePaginationResult<T>>{
+        const findOptions = this.composeFindOptions<T>(dto);
+
+        const [results, count] = await repository.findAndCount({
+            ...findOptions,
+            ...overrideFindOptions,
+        });
+
+        return {
+            data: results,
+            total: count,
+        };
     }
 
     private async cursorPaginate<T extends BaseModel>(
@@ -41,8 +68,47 @@ export class CommonService {
         repository: Repository<T>,
         overrideFindOptions: FindManyOptions<T> = {}, 
         path: string,
-    ){
-      const findOptions = this.composeFindOptions(dto);  
+    ): Promise<CursorPaginationResult<T>>{
+      const findOptions = this.composeFindOptions<T>(dto);
+
+      const results = await repository.find({
+        ...findOptions,
+        ...overrideFindOptions,
+      });
+
+      const lastPost = results.length > 0 && results.length === dto.take ? results[results.length - 1] : null;
+      const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}:${PORT}/${path}`);
+        if (nextUrl) {
+            /**
+             * query 객체의 key값을 확인하면서
+             * key값에 해당하는 value가 존재하면 param에 추가해준다.
+             * 단, where__id_more_than 값은 lastPost의 마지막 값으로 넣어준다.
+             */
+            for(const key of Object.keys(dto)) {
+                if (dto[key]) {
+                    if(key !== 'where__id__more_than' && key !== 'where__id__less_than') {
+                        nextUrl.searchParams.append(key, dto[key].toString());
+                    }
+                }
+            }
+
+            let key: string | null = null;
+            if(dto.order__createdAt === 'ASC') {
+                key = 'where__id__more_than';
+            } else {
+                key = 'where__id__less_than';
+            }
+            nextUrl.searchParams.append(key, lastPost?.id.toString() ?? '0');
+        }
+
+      return {
+        data: results,
+        cursor: {
+            after: lastPost?.id ?? null,
+        },
+        count: results.length,
+        next: nextUrl?.toString() ?? null,
+      }
     }
 
     private composeFindOptions<T extends BaseModel>(
@@ -80,6 +146,11 @@ export class CommonService {
         let order: FindOptionsOrder<T> = {};
 
         for(const [key, value] of Object.entries(dto)) {
+            // 값이 없으면(where/order) 조건에 넣지 않는다.
+            // (undefined/null/빈문자열이 where에 들어가면 id = NULL 같은 쿼리가 되어 결과가 0건이 될 수 있음)
+            if (value === undefined || value === null || value === '') {
+                continue;
+            }
             if(key.startsWith('where__')) {
                 where = {
                     ...where,

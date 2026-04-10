@@ -7,6 +7,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
 import { UsersModel } from 'src/users/entities/users.entity';
+import { PaginationResult } from 'src/common/common.service';
 
 
 @Controller('posts')
@@ -16,7 +17,7 @@ export class PostsController {
   @Get()
   getPosts(
     @Query() query: PaginatePostDto,
-  ): Promise<{data: PostsModel[]}> {
+  ): Promise<PaginationResult<PostsModel>> {
     return this.postsService.paginatePosts(query);
   }
 
