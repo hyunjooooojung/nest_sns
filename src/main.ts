@@ -11,7 +11,9 @@ async function bootstrap() {
     transform: true,
     transformOptions: {
       enableImplicitConversion: true,
-    } // @Type(() => Number) 이 기능을 사용하지 않고도 자동으로 변환해준다.
+    }, // @Type(() => Number) 이 기능을 사용하지 않고도 자동으로 변환해준다.
+    whitelist: true,
+    forbidNonWhitelisted: true,
   }));
   
   await app.listen(process.env.PORT ?? 3000);

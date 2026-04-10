@@ -28,8 +28,11 @@ export class PostsService {
     async paginatePosts(query: PaginatePostDto): Promise<PaginationResult<PostsModel>>{
         return await this.commonService.paginate(
             query, 
-            this.postsRepository, 
-            {}, 
+            this.postsRepository,
+            // overrideFindOptions
+            {
+                relations: ['author'],
+            }, 
             'posts'
         );
         // if(query.page) {

@@ -193,7 +193,12 @@ export class CommonService {
              * FILTER_MAPPER에서 해당되는 field 값을 찾아서 해당되는 유틸리티를 가져온 후 값에 적용한다.
              */
             const [_, field, operator] = split;
-            options[field] = FILTER_MAPPER[operator](value);
+
+            if(operator === 'i_like') {
+                options[field] = FILTER_MAPPER[operator](`%${value}%`);
+            }else {
+                options[field] = FILTER_MAPPER[operator](value);
+            }
 
             // between 외의 경우에는 배열로 변환해서 적용한다.
             // const values = value.toString().split(',');
