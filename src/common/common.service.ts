@@ -3,8 +3,8 @@ import { BasePaginationDto } from './dto/base-pagination.dto';
 import { FindManyOptions, FindOptionsOrder, FindOptionsWhere, Repository } from 'typeorm';
 import { BaseModel } from './entity/base.entity';
 import { FILTER_MAPPER } from './const/filter-mapper.const';
-import { HOST, PROTOCOL, PORT } from './const/env.const';
-
+import { ConfigService } from '@nestjs/config';
+import { ENV_PROTOCOL_KEY, ENV_HOST_KEY, ENV_PORT_KEY } from 'src/common/const/env-keys.const';
 export interface PagePaginationResult<T> {
     data: T[];
     total: number;
@@ -23,6 +23,10 @@ export type PaginationResult<T> = PagePaginationResult<T> | CursorPaginationResu
 
 @Injectable()
 export class CommonService {
+    constructor(
+        private readonly configService: ConfigService,
+    ) {}
+
     async paginate<T extends BaseModel>(
         dto: BasePaginationDto,
         repository: Repository<T>,
@@ -77,6 +81,11 @@ export class CommonService {
       });
 
       const lastPost = results.length > 0 && results.length === dto.take ? results[results.length - 1] : null;
+      
+      const PROTOCOL = this.configService.get<string>(ENV_PROTOCOL_KEY);
+      const HOST = this.configService.get<string>(ENV_HOST_KEY);
+      const PORT = this.configService.get<string>(ENV_PORT_KEY);
+
       const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}:${PORT}/${path}`);
         if (nextUrl) {
             /**

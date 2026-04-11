@@ -6,9 +6,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { HOST, PROTOCOL, PORT } from 'src/common/const/env.const';
 import { CommonService } from 'src/common/common.service';
 import { PaginationResult } from 'src/common/common.service';
+import { ConfigService } from '@nestjs/config';
+import { ENV_PROTOCOL_KEY, ENV_HOST_KEY, ENV_PORT_KEY } from 'src/common/const/env-keys.const';
 
 
 @Injectable()
@@ -17,6 +18,7 @@ export class PostsService {
         @InjectRepository(PostsModel)
         private readonly postsRepository: Repository<PostsModel>,
         private readonly commonService: CommonService,
+        private readonly configService: ConfigService,
     ) {}
 
     async getAllPosts(): Promise<PostsModel[]> {
@@ -89,6 +91,11 @@ export class PostsService {
          */
         
         const lastPost = posts.length > 0 && posts.length === query.take ? posts[posts.length - 1] : null;
+        
+        const PROTOCOL = this.configService.get<string>(ENV_PROTOCOL_KEY);
+        const HOST = this.configService.get<string>(ENV_HOST_KEY);
+        const PORT = this.configService.get<string>(ENV_PORT_KEY);
+        
         const nextUrl = lastPost && new URL(`${PROTOCOL}://${HOST}:${PORT}/posts`);
         if (nextUrl) {
             /**
