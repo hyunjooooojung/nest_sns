@@ -11,14 +11,20 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ENV_DB_HOST_KEY, ENV_DB_PORT_KEY, ENV_DB_USERNAME_KEY, ENV_DB_PASSWORD_KEY, ENV_DB_DATABASE_KEY } from './common/const/env-keys.const';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
 
 @Module({
   imports: [
+    PostsModule,
     ConfigModule.forRoot({
       envFilePath: '.env',
       isGlobal: true,
     }),
-    PostsModule,
+    ServeStaticModule.forRoot({
+      rootPath: PUBLIC_DIRECTORY_PATH,
+      serveRoot: '/public',
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres' as const,
       host: process.env[ENV_DB_HOST_KEY],

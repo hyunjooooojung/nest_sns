@@ -130,15 +130,6 @@ export class PostsService {
         }
     }
 
-    async generatePosts(userId: number){
-        for(let i=0; i<100; i++){
-            await this.createPost(userId, {
-                title: `title ${i}`,
-                content: `content ${i}`,
-            });
-        }
-    }
-
     async getPostById(id: number): Promise<PostsModel> {
         const post = await this.postsRepository.findOne({ 
             where: { id }, 
@@ -153,13 +144,15 @@ export class PostsService {
 
     async createPost(
         authorId: number,
-        postDto: CreatePostDto
+        postDto: CreatePostDto,
+        image: string | null,
     ): Promise<PostsModel> {
         const post = this.postsRepository.create({
             author: { id: authorId },
             ...postDto,
             likeCount: 0,
             commentCount: 0,
+            image: image,
         });
         return await this.postsRepository.save(post);
     }
