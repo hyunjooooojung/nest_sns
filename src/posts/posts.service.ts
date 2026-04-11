@@ -10,6 +10,9 @@ import { CommonService } from 'src/common/common.service';
 import { PaginationResult } from 'src/common/common.service';
 import { ConfigService } from '@nestjs/config';
 import { ENV_PROTOCOL_KEY, ENV_HOST_KEY, ENV_PORT_KEY } from 'src/common/const/env-keys.const';
+import { POSTS_IMAGE_PATH, TEMP_DIRECTORY_PATH } from 'src/common/const/path.const';
+import path, { join } from 'path';
+import { promises } from 'fs';
 
 
 @Injectable()
@@ -142,17 +145,42 @@ export class PostsService {
         return post;
     }
 
+    async createPostImage(dto: CreatePostDto): Promise<boolean> {
+        const tempFilePath = path.join(
+        TEMP_DIRECTORY_PATH,
+            dto.image ?? '',
+        );
+
+        try {
+            await promises.access(tempFilePath);
+        } catch(error) {
+            throw new NotFoundException('존재하지 않는 파일입니다.');
+        }
+
+        // 파일 이름 가져오기
+        const fileName = path.basename(tempFilePath);
+
+        // 새로 이동할 경로
+        const newPath = join(
+            POSTS_IMAGE_PATH,
+            fileName,
+        );
+        
+        // 파일 이동
+        await promises.rename(tempFilePath, newPath);
+
+        return true;
+    }
+
     async createPost(
         authorId: number,
         postDto: CreatePostDto,
-        image: string | null,
     ): Promise<PostsModel> {
         const post = this.postsRepository.create({
             author: { id: authorId },
             ...postDto,
             likeCount: 0,
             commentCount: 0,
-            image: image,
         });
         return await this.postsRepository.save(post);
     }

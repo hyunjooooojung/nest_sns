@@ -29,18 +29,18 @@ export class PostsController {
 
   @Post()
   @UseGuards(AccessTokenGuard)
-  @UseInterceptors(FileInterceptor('image'))
   async createPost(
     @User('id') userId: number,
     @Body() body: CreatePostDto,
-    @UploadedFile() image?: Express.Multer.File,
     // @Body('title') title: string, 
     // @Body('content') content: string,
   ): Promise<PostsModel> {
+    // 파일 이동
+    await this.postsService.createPostImage(body);
+    
     return await this.postsService.createPost(
       userId,
       body,
-      image?.filename ?? null,
     );
   }
 
