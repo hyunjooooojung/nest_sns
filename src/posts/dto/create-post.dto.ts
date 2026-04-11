@@ -19,7 +19,9 @@ import { PostsModel } from "../entities/posts.entity";
  * PickType, OmitType, PartialType -> 값 반환
  */
 export class CreatePostDto extends PickType(PostsModel, ['title', 'content']) {
-    @IsString()
+    @IsString({
+        each: true,
+    })
     @IsOptional()
-    image?: string | null;
+    images: string[] = [];
 }

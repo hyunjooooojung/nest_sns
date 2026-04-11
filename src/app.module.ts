@@ -1,14 +1,18 @@
 import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PostsModule } from './posts/posts.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostsModel } from './posts/entities/posts.entity';
 import { UsersModel } from './users/entities/users.entity';
+import { ImagesModel } from './common/entity/image.entity';
+
+import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
+
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ENV_DB_HOST_KEY, ENV_DB_PORT_KEY, ENV_DB_USERNAME_KEY, ENV_DB_PASSWORD_KEY, ENV_DB_DATABASE_KEY } from './common/const/env-keys.const';
 import { ServeStaticModule } from '@nestjs/serve-static';
@@ -35,6 +39,7 @@ import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
       entities: [
         PostsModel,
         UsersModel,
+        ImagesModel,
       ],
       synchronize: true, // development 환경에서만 사용, production 환경에서는 false로 설정
     }),

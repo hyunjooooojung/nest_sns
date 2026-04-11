@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
 import { PostsModel } from './entities/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +12,10 @@ import { ENV_PROTOCOL_KEY, ENV_HOST_KEY, ENV_PORT_KEY } from 'src/common/const/e
 import { POSTS_IMAGE_PATH, TEMP_DIRECTORY_PATH } from 'src/common/const/path.const';
 import path, { join } from 'path';
 import { promises } from 'fs';
+import { CreatePostImageDto } from './image/dto/create-image.dto';
+import { ImagesModel } from 'src/common/entity/image.entity';
+import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
+import { QueryRunner } from 'typeorm/browser';
 
 
 @Injectable()
@@ -20,13 +23,15 @@ export class PostsService {
     constructor(
         @InjectRepository(PostsModel)
         private readonly postsRepository: Repository<PostsModel>,
+        @InjectRepository(ImagesModel)
+        private readonly imagesRepository: Repository<ImagesModel>,
         private readonly commonService: CommonService,
         private readonly configService: ConfigService,
     ) {}
 
     async getAllPosts(): Promise<PostsModel[]> {
         return await this.postsRepository.find({
-            relations: ['author'],
+            ...DEFAULT_POST_FIND_OPTIONS,
         });
     }
 
@@ -36,8 +41,8 @@ export class PostsService {
             this.postsRepository,
             // overrideFindOptions
             {
-                relations: ['author'],
-            }, 
+                ...DEFAULT_POST_FIND_OPTIONS,
+            },
             'posts'
         );
         // if(query.page) {
@@ -134,9 +139,9 @@ export class PostsService {
     }
 
     async getPostById(id: number): Promise<PostsModel> {
-        const post = await this.postsRepository.findOne({ 
+        const post = await this.postsRepository.findOne({
+            ...DEFAULT_POST_FIND_OPTIONS,
             where: { id }, 
-            relations: ['author'],
         });
 
         if (!post) {
@@ -145,44 +150,25 @@ export class PostsService {
         return post;
     }
 
-    async createPostImage(dto: CreatePostDto): Promise<boolean> {
-        const tempFilePath = path.join(
-        TEMP_DIRECTORY_PATH,
-            dto.image ?? '',
-        );
-
-        try {
-            await promises.access(tempFilePath);
-        } catch(error) {
-            throw new NotFoundException('존재하지 않는 파일입니다.');
-        }
-
-        // 파일 이름 가져오기
-        const fileName = path.basename(tempFilePath);
-
-        // 새로 이동할 경로
-        const newPath = join(
-            POSTS_IMAGE_PATH,
-            fileName,
-        );
-        
-        // 파일 이동
-        await promises.rename(tempFilePath, newPath);
-
-        return true;
+    getRepository(queryRunner?: QueryRunner){
+        return queryRunner ? queryRunner.manager.getRepository<PostsModel>(PostsModel) : this.postsRepository;
     }
 
     async createPost(
         authorId: number,
         postDto: CreatePostDto,
+        queryRunner?: QueryRunner
     ): Promise<PostsModel> {
-        const post = this.postsRepository.create({
+        const repository = this.getRepository(queryRunner);
+        
+        const post = repository.create({
             author: { id: authorId },
             ...postDto,
+            images: [],
             likeCount: 0,
             commentCount: 0,
         });
-        return await this.postsRepository.save(post);
+        return await repository.save(post);
     }
 
     async updatePost(
@@ -196,9 +182,10 @@ export class PostsService {
         throw new NotFoundException('Post not found');
         }
 
+        const { images: _, ...updateData } = body;
         await this.postsRepository.update(id, {
             author: { id: authorId },
-            ...body,
+            ...updateData,
         });
         return post;
     }
@@ -212,7 +199,8 @@ export class PostsService {
         if (!post) {
             throw new NotFoundException('Post not found');
         }
-        await this.postsRepository.update(id, { author: { id: authorId ?? post.author.id }, ...body });
+        const { images: _, ...updateData } = body;
+        await this.postsRepository.update(id, { author: { id: authorId ?? post.author.id }, ...updateData });
         return post;
     }
 
