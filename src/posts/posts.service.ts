@@ -138,8 +138,14 @@ export class PostsService {
         }
     }
 
-    async getPostById(id: number): Promise<PostsModel> {
-        const post = await this.postsRepository.findOne({
+    getRepository(queryRunner?: QueryRunner){
+        return queryRunner ? queryRunner.manager.getRepository<PostsModel>(PostsModel) : this.postsRepository;
+    }
+
+    async getPostById(id: number, queryRunner?: QueryRunner): Promise<PostsModel> {
+        const repository = this.getRepository(queryRunner);
+
+        const post = await repository.findOne({
             ...DEFAULT_POST_FIND_OPTIONS,
             where: { id }, 
         });
@@ -148,10 +154,6 @@ export class PostsService {
             throw new NotFoundException('Post not found');
         }
         return post;
-    }
-
-    getRepository(queryRunner?: QueryRunner){
-        return queryRunner ? queryRunner.manager.getRepository<PostsModel>(PostsModel) : this.postsRepository;
     }
 
     async createPost(

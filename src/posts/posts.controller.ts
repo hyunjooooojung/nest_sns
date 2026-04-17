@@ -12,6 +12,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageTypeEnum } from 'src/common/entity/image.entity';
 import { DataSource } from 'typeorm';
 import { PostImagesService } from './image/images.service';
+import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
+import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
+import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
+import type { QueryRunner as QR } from 'typeorm';
 
 
 @Controller('posts')
@@ -30,54 +34,36 @@ export class PostsController {
   }
 
   @Get(':id')
+  @UseInterceptors(LogInterceptor)
   getPost(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.getPostById(id);
   }
 
   @Post()
   @UseGuards(AccessTokenGuard)
+  @UseInterceptors(TransactionInterceptor)
   async createPost(
     @User('id') userId: number,
     @Body() body: CreatePostDto,
+    @QueryRunner() qr: QR,
   ): Promise<PostsModel> {
+    // 게시글 생성
+    const post = await this.postsService.createPost(
+      userId,
+      body,
+      qr,
+    );
 
-    // 트랜잭션 담당 쿼리 러너 생성
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    // 쿼리 러너 연결 및 시작
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // 게시글 생성
-      const post = await this.postsService.createPost(
-        userId,
-        body,
-      );
-
-      // 이미지 업로드
-      for(let i = 0; i < body.images.length; i++){
-        await this.postImagesService.createPostImage({
-          post,
-          order: i,
-          type: ImageTypeEnum.POST,
-          path: body.images[i],
-        });
-      };
-
-      // 트랜잭션 커밋
-      await queryRunner.commitTransaction();
-      await queryRunner.release();
-
-      return this.postsService.getPostById(post.id);
-
-    } catch (error) {
-      // 트랜잭션 롤백
-      await queryRunner.rollbackTransaction();
-      await queryRunner.release();
-      throw new InternalServerErrorException(error);
-    }
-    
+    // 이미지 업로드
+    for(let i = 0; i < body.images.length; i++){
+      await this.postImagesService.createPostImage({
+        post,
+        order: i,
+        type: ImageTypeEnum.POST,
+        path: body.images[i],
+      }, qr);
+    };
+    return this.postsService.getPostById(post.id, qr);
   }
 
   @Patch(':id')

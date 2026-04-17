@@ -9,6 +9,9 @@ import { TEMP_DIRECTORY_PATH } from './const/path.const';
 import { v4 as uuid } from 'uuid';
 import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
+import { TransactionInterceptor } from './interceptor/transaction.interceptor';
+import { LogInterceptor } from './interceptor/log.interceptor';
+
 @Module({
   imports: [
     MulterModule.register({
@@ -44,7 +47,7 @@ import { UsersModule } from 'src/users/users.module';
     UsersModule,
   ],
   controllers: [CommonController],
-  providers: [CommonService],
-  exports: [CommonService],
+  providers: [CommonService, TransactionInterceptor, LogInterceptor],
+  exports: [CommonService, TransactionInterceptor, LogInterceptor],
 })
 export class CommonModule {}
