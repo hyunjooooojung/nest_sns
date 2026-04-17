@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards, Query, UseInterceptors, UploadedFile, InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards, Query, UseInterceptors, UploadedFile, InternalServerErrorException, UseFilters, BadRequestException } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entities/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
@@ -16,6 +16,7 @@ import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
 import { TransactionInterceptor } from 'src/common/interceptor/transaction.interceptor';
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import type { QueryRunner as QR } from 'typeorm';
+import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
 
 
 @Controller('posts')
@@ -27,6 +28,8 @@ export class PostsController {
   ) {}
 
   @Get()
+  @UseInterceptors(LogInterceptor)
+  @UseFilters(HttpExceptionFilter)
   getPosts(
     @Query() query: PaginatePostDto,
   ): Promise<PaginationResult<PostsModel>> {
