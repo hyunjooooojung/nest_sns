@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, MiddlewareConsumer, Module, NestMiddleware, NestModule, RequestMethod } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
@@ -17,6 +17,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ENV_DB_HOST_KEY, ENV_DB_PORT_KEY, ENV_DB_USERNAME_KEY, ENV_DB_PASSWORD_KEY, ENV_DB_DATABASE_KEY } from './common/const/env-keys.const';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
+import { LogMiddleware } from './common/middleware/log.middleware';
 
 @Module({
   imports: [
@@ -53,7 +54,16 @@ import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
     useClass: ClassSerializerInterceptor,
   }],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(
+      LogMiddleware,
+    ).forRoutes({
+      path: '*',
+      method: RequestMethod.ALL
+    });
+  }
+}
 
 /**
    * serialization -> 직렬화 -> 현재 시스템에서 사용되는 (Nest JS) 데이터의 구조를 다른 시스템에서도
