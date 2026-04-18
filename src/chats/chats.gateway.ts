@@ -4,6 +4,8 @@ import { CreateChatDto } from "./dto/create-chat-dto";
 import { ChatsService } from "./chats.service";
 import { ChatsModel } from "./entity/chats.entity";
 import { EnterChatDto } from "./dto/enter-chat.dto";
+import { CreateMessageDto } from "./messages/dto/create-messages.dto";
+import { ChatsMessagesService } from "./messages/messages.service";
 
 @WebSocketGateway({
     // ws://localhost:3000/chats
@@ -12,6 +14,7 @@ import { EnterChatDto } from "./dto/enter-chat.dto";
 export class ChatsGateway implements OnGatewayConnection{
     constructor(
         private readonly chatsService: ChatsService,
+        private readonly chatsMessagesService: ChatsMessagesService,
     ){
 
     }
@@ -56,15 +59,23 @@ export class ChatsGateway implements OnGatewayConnection{
 
     // socket.on('seng_message', (message)=>{ console.log(message); });
     @SubscribeMessage('send_message')
-    sendMessage(
-        @MessageBody() message:{message: string, chatId: number},
+    async sendMessage(
+        @MessageBody() dto: CreateMessageDto,
         @ConnectedSocket() socket: Socket,
     ){
-        console.log(`message received: ${message}`);
+        const chatExists = await this.chatsService.checkIfChatExists(dto.chatId);
+        if(!chatExists){
+            throw new WsException({
+                message: 'Chat not found',
+                statusCode: 404,
+            });
+        }
+
+        const message = await this.chatsMessagesService.createMessage(dto);
         // 1. 모든 사용자에게 메시지를 보내는 방법
         // this.server.in(message.chatId.toString()).emit('receive_message', message.message);
         
         // 2. 특정 채팅방에만 메시지를 보내는 방법(broadcast)
-        socket.to(message.chatId.toString()).emit('receive_message', message.message);
+        socket.to(message.id.toString()).emit('receive_message', message.message);
     }
 }

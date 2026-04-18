@@ -20,6 +20,7 @@ import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
 import { LogMiddleware } from './common/middleware/log.middleware';
 import { ChatsModule } from './chats/chats.module';
 import { ChatsModel } from './chats/entity/chats.entity';
+import { MessagesModel } from './chats/messages/entity/messages.entity';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { ChatsModel } from './chats/entity/chats.entity';
         UsersModel,
         ImagesModel,
         ChatsModel,
+        MessagesModel,
       ],
       synchronize: true, // development 환경에서만 사용, production 환경에서는 false로 설정
     }),
