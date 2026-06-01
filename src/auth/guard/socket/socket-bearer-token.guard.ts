@@ -29,8 +29,12 @@ export class SocketBearerTokenGuard implements CanActivate {
             );
     
             const payload = this.authService.verifyToken(token);
-            const user = this.userService.findUserByEmail(payload.email);
-    
+            const user = await this.userService.findUserByEmail(payload.email);
+
+            if (!user) {
+                throw new WsException('토큰이 유효하지 않습니다.');
+            }
+
             socket.user = user;
             socket.token = token;
             socket.tokenType = payload.tokenType;

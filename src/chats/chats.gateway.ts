@@ -1,4 +1,4 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
+import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
 import { CreateChatDto } from "./dto/create-chat-dto";
 import { ChatsService } from "./chats.service";
@@ -10,15 +10,19 @@ import { UseFilters, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common"
 import { SocketCatchHttpExceptionFilter } from "src/common/exception-filter/socket-catch-http.exception-filter";
 import { SocketBearerTokenGuard } from "src/auth/guard/socket/socket-bearer-token.guard";
 import { UsersModel } from "src/users/entities/users.entity";
+import { UsersService } from "src/users/users.service";
+import { AuthService } from "src/auth/auth.service";
 
 @WebSocketGateway({
     // ws://localhost:3000/chats
     namespace: 'chats',
 })
-export class ChatsGateway implements OnGatewayConnection{
+export class ChatsGateway implements OnGatewayConnection, OnGatewayInit, OnGatewayDisconnect {
     constructor(
         private readonly chatsService: ChatsService,
         private readonly chatsMessagesService: ChatsMessagesService,
+        private readonly authService: AuthService,
+        private readonly usersService: UsersService,
     ){
 
     }
@@ -26,8 +30,46 @@ export class ChatsGateway implements OnGatewayConnection{
     @WebSocketServer()
     server: Server;
 
-    handleConnection(socket: Socket) {
+    afterInit(server: any) {
+        console.log(`after gateway init`);
+    }
+
+    handleDisconnect(socket: Socket) {
+        console.log(`on disconnect called : ${socket.id}`)
+    }
+
+    async handleConnection(socket: Socket & {user: UsersModel}) {
         console.log(`on connect called: ${socket.id}`);
+
+        const headers = socket.handshake.headers;
+
+        // Bearer xxxxxx
+        const rawToken = headers['authorization'];
+        
+        if (!rawToken || Array.isArray(rawToken)) {
+            socket.disconnect();
+            return;
+        }
+
+        try {
+            const token = this.authService.extractTokenFromHeader(
+                rawToken,
+                true,
+            );
+    
+            const payload = this.authService.verifyToken(token);
+            const user = await this.usersService.findUserByEmail(payload.email);
+
+            if (!user) {
+                throw new WsException('토큰이 유효하지 않습니다.');
+            }
+
+            socket.user = user;
+
+            return true;
+        } catch(e) {
+            socket.disconnect();
+        }
     }
 
     @UsePipes(new ValidationPipe({
@@ -39,7 +81,6 @@ export class ChatsGateway implements OnGatewayConnection{
         forbidNonWhitelisted: true,
       }))
     @UseFilters(SocketCatchHttpExceptionFilter)
-    @UseGuards(SocketBearerTokenGuard)
     @SubscribeMessage('create_chat')
     async creatChat(
         @MessageBody() data: CreateChatDto,
@@ -63,11 +104,10 @@ export class ChatsGateway implements OnGatewayConnection{
         forbidNonWhitelisted: true,
       }))
     @UseFilters(SocketCatchHttpExceptionFilter)
-    @UseGuards(SocketBearerTokenGuard)
     @SubscribeMessage('enter_chat')
     async enterChat(
         @MessageBody() data: EnterChatDto,
-        @ConnectedSocket() socket: Socket,
+        @ConnectedSocket() socket: Socket & {user: UsersModel},
     ){
         for(const chatId of data.chatIds){
             const exists = await this.chatsService.checkIfChatExists(chatId);
@@ -90,7 +130,6 @@ export class ChatsGateway implements OnGatewayConnection{
         forbidNonWhitelisted: true,
       }))
     @UseFilters(SocketCatchHttpExceptionFilter)
-    @UseGuards(SocketBearerTokenGuard)
     // socket.on('seng_message', (message)=>{ console.log(message); });
     @SubscribeMessage('send_message')
     async sendMessage(
