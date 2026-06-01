@@ -1,6 +1,6 @@
 import { ChatsModel } from "src/chats/entity/chats.entity";
 import { BaseModel } from "src/common/entity/base.entity";
-import { UsersModel } from "src/users/entities/users.entity";
+import { UsersModel } from "src/users/entity/users.entity";
 import { Column, Entity, ManyToOne } from "typeorm";
 import { IsString } from "class-validator";
 

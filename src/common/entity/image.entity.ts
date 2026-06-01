@@ -4,7 +4,7 @@ import { Column, Entity, ManyToOne } from "typeorm";
 import { Transform } from "class-transformer";
 import { join } from "path";
 import { POST_PUBLIC_IMAGE_PATH } from "../const/path.const";
-import { PostsModel } from "src/posts/entities/posts.entity";
+import { PostsModel } from "src/posts/entity/posts.entity";
 
 export enum ImageTypeEnum {
     POST = 'POST_IMAGE',

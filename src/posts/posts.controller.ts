@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards, Query, UseInterceptors, UploadedFile, InternalServerErrorException, UseFilters, BadRequestException } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { PostsModel } from './entities/posts.entity';
+import { PostsModel } from './entity/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
 import { User } from 'src/users/decorator/user.decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { UsersModel } from 'src/users/entities/users.entity';
+import { UsersModel } from 'src/users/entity/users.entity';
 import { PaginationResult } from 'src/common/common.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageTypeEnum } from 'src/common/entity/image.entity';

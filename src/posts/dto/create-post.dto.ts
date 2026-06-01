@@ -1,6 +1,6 @@
 import { PickType } from "@nestjs/mapped-types";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { PostsModel } from "../entities/posts.entity";
+import { PostsModel } from "../entity/posts.entity";
 
 // export class CreatePostDto {
 //     @IsString({

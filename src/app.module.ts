@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PostsModel } from './posts/entities/posts.entity';
-import { UsersModel } from './users/entities/users.entity';
+import { PostsModel } from './posts/entity/posts.entity';
+import { UsersModel } from './users/entity/users.entity';
 import { ImagesModel } from './common/entity/image.entity';
 
 import { PostsModule } from './posts/posts.module';
@@ -21,6 +21,8 @@ import { LogMiddleware } from './common/middleware/log.middleware';
 import { ChatsModule } from './chats/chats.module';
 import { ChatsModel } from './chats/entity/chats.entity';
 import { MessagesModel } from './chats/messages/entity/messages.entity';
+import { CommentsModule } from './posts/comments/comments.module';
+import { CommentsModel } from './posts/comments/entity/comments.entity';
 
 @Module({
   imports: [
@@ -46,6 +48,7 @@ import { MessagesModel } from './chats/messages/entity/messages.entity';
         ImagesModel,
         ChatsModel,
         MessagesModel,
+        CommentsModel,
       ],
       synchronize: true, // development 환경에서만 사용, production 환경에서는 false로 설정
     }),
@@ -53,6 +56,7 @@ import { MessagesModel } from './chats/messages/entity/messages.entity';
     AuthModule,
     CommonModule,
     ChatsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService, {

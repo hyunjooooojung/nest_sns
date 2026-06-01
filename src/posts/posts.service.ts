@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { FindOptionsWhere, LessThan, MoreThan, Repository } from 'typeorm';
-import { PostsModel } from './entities/posts.entity';
+import { PostsModel } from './entity/posts.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -212,5 +212,13 @@ export class PostsService {
         throw new NotFoundException('Post not found');
         }
         await this.postsRepository.delete(id);
+    }
+
+    async checkPostExistsById(id: number) {
+        return this.postsRepository.exists({
+            where: {
+                id,
+            },
+        });
     }
 }
