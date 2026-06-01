@@ -11,6 +11,7 @@ import { User } from 'src/users/decorator/user.decorator';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UsersModel } from 'src/users/entity/users.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { IsPublic } from 'src/common/decorator/is-public.decorator';
 
 @Controller('posts/:postId/comments')
 export class CommentsController {
@@ -18,6 +19,7 @@ export class CommentsController {
   }
 
   @Get()
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   @UseFilters(HttpExceptionFilter)
   getComments(
@@ -31,6 +33,7 @@ export class CommentsController {
   }
 
   @Get(':commentId')
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   getComment(
     @Param('commentId', ParseIntPipe) commentId: number
@@ -40,7 +43,6 @@ export class CommentsController {
 
   @Post()
   @UseInterceptors(LogInterceptor)
-  @UseGuards(AccessTokenGuard)
   createComment(
     @Param('postId', ParseIntPipe) postId: number,
     @User() user: UsersModel,
@@ -56,7 +58,6 @@ export class CommentsController {
 
   @Patch(':commentId')
   @UseInterceptors(LogInterceptor)
-  @UseGuards(AccessTokenGuard)
   patchComment(
     @Param('commentId', ParseIntPipe) commentId: number,
     @Body() body: UpdateCommentDto,
@@ -69,7 +70,6 @@ export class CommentsController {
 
   @Delete(':commentId')
   @UseInterceptors(LogInterceptor)
-  @UseGuards(AccessTokenGuard)
   deleteComment(
     @Param('commentId', ParseIntPipe) commentId: number,
   ) {

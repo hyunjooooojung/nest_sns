@@ -4,12 +4,14 @@ import { MaxLengthPipe, MinLengthPipe, PasswordPipe } from './pipe/password.pipe
 import { BasicTokenGuard } from './guard/basic-token.guard';
 import { RefreshTokenGuard } from './guard/bearer-token.guard';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { IsPublic } from 'src/common/decorator/is-public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('token/access')
+  @IsPublic()
   @UseGuards(RefreshTokenGuard)
   rotateAccessToken(
     @Headers('authorization') rawToken: string) {
@@ -22,6 +24,7 @@ export class AuthController {
     }
   
   @Post('token/refresh')
+  @IsPublic()
   @UseGuards(RefreshTokenGuard)
   rotateRefreshToken(
     @Headers('authorization') rawToken: string) {
@@ -57,6 +60,7 @@ export class AuthController {
    *    - URL에 자격증명이 노출될 위험 없음
    */
   @Post('login')
+  @IsPublic()
   loginWithEmail(
     @Body() body: { email: string, password: string },
   ){
@@ -67,6 +71,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @IsPublic()
   registerWithEmail(
     @Body() body: RegisterUserDto
   ) {

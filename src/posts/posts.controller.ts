@@ -6,9 +6,7 @@ import { User } from 'src/users/decorator/user.decorator';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginatePostDto } from './dto/paginate-post.dto';
-import { UsersModel } from 'src/users/entity/users.entity';
 import { PaginationResult } from 'src/common/common.service';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageTypeEnum } from 'src/common/entity/image.entity';
 import { DataSource } from 'typeorm';
 import { PostImagesService } from './image/images.service';
@@ -17,6 +15,9 @@ import { TransactionInterceptor } from 'src/common/interceptor/transaction.inter
 import { QueryRunner } from 'src/common/decorator/query-runner.decorator';
 import type { QueryRunner as QR } from 'typeorm';
 import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
+import { Roles } from 'src/users/decorator/roles.decorator';
+import { RolesEnum } from 'src/users/const/roles.const';
+import { IsPublic } from 'src/common/decorator/is-public.decorator';
 
 
 @Controller('posts')
@@ -28,6 +29,7 @@ export class PostsController {
   ) {}
 
   @Get()
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   @UseFilters(HttpExceptionFilter)
   getPosts(
@@ -37,13 +39,13 @@ export class PostsController {
   }
 
   @Get(':id')
+  @IsPublic()
   @UseInterceptors(LogInterceptor)
   getPost(@Param('id', ParseIntPipe) id: number) {
     return this.postsService.getPostById(id);
   }
 
   @Post()
-  @UseGuards(AccessTokenGuard)
   @UseInterceptors(TransactionInterceptor)
   async createPost(
     @User('id') userId: number,
@@ -71,14 +73,14 @@ export class PostsController {
 
   @Patch(':id')
   updatePost(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body('authorId') authorId: number,
     @Body() body: UpdatePostDto
     // @Body('title') title: string,
     // @Body('content') content: string,
   ) {
     return this.postsService.updatePost(
-      parseInt(id), 
+      id, 
       authorId, 
       body,
     );
@@ -86,23 +88,24 @@ export class PostsController {
 
   @Patch(':id')
   patchPost(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body('authorId') authorId: number | undefined,
     @Body() body: UpdatePostDto
     // @Body('title') title: string | undefined,
     // @Body('content') content: string | undefined,
   ) {
     return this.postsService.patchPost(
-      parseInt(id), 
+      id,
       authorId, 
       body,
     );
   }
 
   @Delete(':id')
-  async deletePost(@Param('id') id: string): Promise<void> {
+  @Roles(RolesEnum.ADMIN)
+  async deletePost(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.postsService.deletePost(
-      parseInt(id),
+      id,
     );
   }
 }
