@@ -1,4 +1,15 @@
-import { Controller, DefaultValuePipe, Delete, Get, Param, ParseBoolPipe, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import {
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
+  ParseBoolPipe,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Roles } from './decorator/roles.decorator';
 import { RolesEnum } from './const/roles.const';
@@ -18,7 +29,8 @@ export class UsersController {
   @Get('follow')
   async getFollow(
     @User() user: UsersModel,
-    @Query('includeNotConfirmed', new DefaultValuePipe(false), ParseBoolPipe) includeNotConfirmed: boolean,
+    @Query('includeNotConfirmed', new DefaultValuePipe(false), ParseBoolPipe)
+    includeNotConfirmed: boolean,
   ) {
     return this.usersService.getFollowers(user.id, includeNotConfirmed);
   }
@@ -28,10 +40,7 @@ export class UsersController {
     @User() user: UsersModel,
     @Param('id', ParseIntPipe) followeeId: number,
   ) {
-    await this.usersService.followUser(
-      user.id,
-      followeeId,
-    );
+    await this.usersService.followUser(user.id, followeeId);
 
     return true;
   }
@@ -51,10 +60,7 @@ export class UsersController {
     @User() user: UsersModel,
     @Param('id', ParseIntPipe) followeeId: number,
   ) {
-    await this.usersService.deleteFollow(
-      user.id,
-      followeeId,
-    );
+    await this.usersService.deleteFollow(user.id, followeeId);
 
     return true;
   }

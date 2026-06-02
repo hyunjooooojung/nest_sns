@@ -18,24 +18,32 @@ export class PasswordPipe implements PipeTransform<string, string> {
 
 @Injectable()
 export class MaxLengthPipe implements PipeTransform<string, string> {
-    constructor(private readonly length: number, private readonly subject: string) {
+  constructor(
+    private readonly length: number,
+    private readonly subject: string,
+  ) {}
+  transform(value: any, metadata: ArgumentMetadata): string {
+    if (value.toString().length > this.length) {
+      throw new BadRequestException(
+        `${this.subject}의 길이는 ${this.length}자 이하여야 합니다.`,
+      );
     }
-    transform(value: any, metadata: ArgumentMetadata): string {
-        if(value.toString().length > this.length) {
-            throw new BadRequestException(`${this.subject}의 길이는 ${this.length}자 이하여야 합니다.`);
-        }
-        return value.toString().trim();
-    }
+    return value.toString().trim();
+  }
 }
 
 @Injectable()
 export class MinLengthPipe implements PipeTransform<string, string> {
-    constructor(private readonly length: number, private readonly subject: string) {
+  constructor(
+    private readonly length: number,
+    private readonly subject: string,
+  ) {}
+  transform(value: any, metadata: ArgumentMetadata): string {
+    if (value.toString().length < this.length) {
+      throw new BadRequestException(
+        `${this.subject}의 길이는 ${this.length}자 이상이어야 합니다.`,
+      );
     }
-    transform(value: any, metadata: ArgumentMetadata): string {
-        if(value.toString().length < this.length) {
-            throw new BadRequestException(`${this.subject}의 길이는 ${this.length}자 이상이어야 합니다.`);
-        }
-        return value.toString().trim();
-    }
+    return value.toString().trim();
+  }
 }

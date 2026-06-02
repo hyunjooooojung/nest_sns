@@ -8,42 +8,43 @@ import { PaginateChatDto } from './dto/paginate-chat.dto';
 
 @Injectable()
 export class ChatsService {
-    constructor(
-        @InjectRepository(ChatsModel)
-        private readonly chatsRepository: Repository<ChatsModel>,
-        private readonly commonService: CommonService,
-    ) {}
+  constructor(
+    @InjectRepository(ChatsModel)
+    private readonly chatsRepository: Repository<ChatsModel>,
+    private readonly commonService: CommonService,
+  ) {}
 
-    paginateChats(dto: PaginateChatDto){
-        return this.commonService.paginate(dto,
-            this.chatsRepository,
-            {
-                relations: {
-                    users: true,
-                }
-            },
-            'chats',
-        );
-    }
+  paginateChats(dto: PaginateChatDto) {
+    return this.commonService.paginate(
+      dto,
+      this.chatsRepository,
+      {
+        relations: {
+          users: true,
+        },
+      },
+      'chats',
+    );
+  }
 
-    async createChat(dto: CreateChatDto){
-        const chat = await this.chatsRepository.save({
-            users: dto.userIds.map((id) => ({id: id})),
-        });
+  async createChat(dto: CreateChatDto) {
+    const chat = await this.chatsRepository.save({
+      users: dto.userIds.map((id) => ({ id: id })),
+    });
 
-        return this.chatsRepository.findOne({
-            where: {
-                id: chat.id,
-            },
-        })
-    }
+    return this.chatsRepository.findOne({
+      where: {
+        id: chat.id,
+      },
+    });
+  }
 
-    async checkIfChatExists(chatId: number) {
-        const exists = await this.chatsRepository.exists({
-            where: {
-                id: chatId,
-            }
-        });
-        return exists;
-    }
+  async checkIfChatExists(chatId: number) {
+    const exists = await this.chatsRepository.exists({
+      where: {
+        id: chatId,
+      },
+    });
+    return exists;
+  }
 }

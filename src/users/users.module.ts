@@ -6,12 +6,7 @@ import { UsersModel } from './entity/users.entity';
 import { UserFollowersModel } from './entity/user-followers.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      UsersModel, 
-      UserFollowersModel
-    ])
-  ],
+  imports: [TypeOrmModule.forFeature([UsersModel, UserFollowersModel])],
   exports: [UsersService],
   controllers: [UsersController],
   providers: [UsersService],

@@ -1,8 +1,8 @@
-import { ValidationArguments } from "class-validator";
+import { ValidationArguments } from 'class-validator';
 
 /**
  * ValidationArguments 프로퍼티
- * 
+ *
  * 1) value -> 검증되고 있는 값(입력된 값)
  * 2) constraints -> 파라미터에 입력된 제한 사항들
  *      args.constraints[0] -> 1
@@ -13,9 +13,9 @@ import { ValidationArguments } from "class-validator";
  */
 
 export const lengthValidationMessage = (args: ValidationArguments) => {
-    if(args.constraints.length === 2) {
-        return `${args.property})은 ${args.constraints[0]}자 이상 ${args.constraints[1]}자 이하여야 합니다.`;
-    } else {
-        return `${args.property}은 ${args.constraints[0]}자 이상이어야 합니다.`;
-    }
-}
+  if (args.constraints.length === 2) {
+    return `${args.property})은 ${args.constraints[0]}자 이상 ${args.constraints[1]}자 이하여야 합니다.`;
+  } else {
+    return `${args.property}은 ${args.constraints[0]}자 이상이어야 합니다.`;
+  }
+};

@@ -21,12 +21,12 @@ import { LogInterceptor } from './interceptor/log.interceptor';
       fileFilter: (req, file, callback) => {
         /**
          * callback(에러, boolean)
-         * 
+         *
          * 첫번째 파라미터는 에러가 있을 경우 에러 정보를 넣어준다.
          * 두번째 파라미터는 파일을 받을지 말지 boolean 값을 넣어준다.
          */
         const ext = extname(file.originalname);
-        if(ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
+        if (ext !== '.png' && ext !== '.jpg' && ext !== '.jpeg') {
           return callback(
             new BadRequestException('jpg, png, jpeg 파일만 업로드 가능합니다.'),
             false,
@@ -35,12 +35,12 @@ import { LogInterceptor } from './interceptor/log.interceptor';
         return callback(null, true);
       },
       storage: multer.diskStorage({
-        destination: function(req, file, callback) {
+        destination: function (req, file, callback) {
           callback(null, TEMP_DIRECTORY_PATH);
         },
-        filename: function(req, file, callback) {
-          callback(null, `${uuid()}${extname(file.originalname)}`)
-        }
+        filename: function (req, file, callback) {
+          callback(null, `${uuid()}${extname(file.originalname)}`);
+        },
       }),
     }),
     AuthModule,

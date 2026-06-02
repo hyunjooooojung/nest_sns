@@ -11,13 +11,13 @@ import { AuthModule } from 'src/auth/auth.module';
 import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  imports:[
+  imports: [
     TypeOrmModule.forFeature([ChatsModel, MessagesModel]),
     CommonModule,
     AuthModule,
     UsersModule,
   ],
   controllers: [ChatsController],
-  providers: [ChatsGateway,ChatsService, ChatsMessagesService],
+  providers: [ChatsGateway, ChatsService, ChatsMessagesService],
 })
 export class ChatsModule {}

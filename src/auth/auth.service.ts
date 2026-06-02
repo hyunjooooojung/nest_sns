@@ -5,10 +5,13 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { ConfigService } from '@nestjs/config';
-import { ENV_HASH_ROUNDS_KEY, ENV_JWT_SECRET_KEY } from 'src/common/const/env-keys.const';
+import {
+  ENV_HASH_ROUNDS_KEY,
+  ENV_JWT_SECRET_KEY,
+} from 'src/common/const/env-keys.const';
 @Injectable()
 export class AuthService {
-    /**
+  /**
      * 토큰을 사용하게 되는 방식
      * 
      * 1) 사용자가 로그인 또는 회원가입을 진행하면
@@ -51,125 +54,135 @@ export class AuthService {
         4. loginWithEmail에서 반환된 데이터를 기반으로 토큰 생성
     */
 
-    constructor(
-        private readonly jwtService: JwtService,
-        private readonly usersService: UsersService,
-        private readonly configService: ConfigService,
-    ) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
+  /**
+   * Payload에 들어갈 정보
+   *
+   * 1) email
+   * 2) sub -> id
+   * 3) type -> accessToken, refreshToken
+   *
+   * {email: string, id: number}
+   */
+  signToken(user: Pick<UsersModel, 'email' | 'id'>, isRefreshToken: boolean) {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      type: isRefreshToken ? 'refreshToken' : 'accessToken',
+    };
+
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
+      expiresIn: isRefreshToken ? 3600 : 3600, // 1시간 -> TODO : env 변수로 관리
+    });
+  }
+
+  loginUser(user: Pick<UsersModel, 'email' | 'id'>) {
+    return {
+      accessToken: this.signToken(user, false),
+      refreshToken: this.signToken(user, true),
+    };
+  }
+
+  async authenticateWithEmailAndPassword(
+    user: Pick<UsersModel, 'email' | 'password'>,
+  ) {
     /**
-     * Payload에 들어갈 정보
-     * 
-     * 1) email
-     * 2) sub -> id
-     * 3) type -> accessToken, refreshToken
-     * 
-     * {email: string, id: number}
+     * 1. 사용자가 존재하는지 확인(email)
+     * 2. 비밀번호가 맞는지 확인
+     * 3. 모두 통과되면 찾은 사용자 정보 반환
      */
-    signToken(user: Pick<UsersModel, 'email' | 'id'>, isRefreshToken: boolean) {
-        const payload = {
-            email: user.email,
-            sub: user.id,
-            type: isRefreshToken ? 'refreshToken' : 'accessToken',
-        }
-
-        return this.jwtService.sign(payload, {
-            secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
-            expiresIn: isRefreshToken ? 3600 : 3600, // 1시간 -> TODO : env 변수로 관리
-        });
+    const foundUser = await this.usersService.findUserByEmail(user.email);
+    if (!foundUser) {
+      throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
     }
 
-    loginUser(user: Pick<UsersModel, 'email' | 'id'>) {
-        return {
-            accessToken: this.signToken(user, false),
-            refreshToken: this.signToken(user, true),
-        }
+    const validatePassword = await bcrypt.compare(
+      user.password,
+      foundUser.password,
+    );
+    if (!validatePassword) {
+      throw new UnauthorizedException('비밀번호가 맞지 않습니다.');
     }
 
-    async authenticateWithEmailAndPassword(user: Pick<UsersModel, 'email' | 'password'>) {
-        /**
-         * 1. 사용자가 존재하는지 확인(email)
-         * 2. 비밀번호가 맞는지 확인
-         * 3. 모두 통과되면 찾은 사용자 정보 반환
-         */
-        const foundUser = await this.usersService.findUserByEmail(user.email);
-        if(!foundUser) {
-            throw new UnauthorizedException('사용자를 찾을 수 없습니다.');
-        }
+    return foundUser;
+  }
 
-        const validatePassword  = await bcrypt.compare(user.password, foundUser.password);
-        if(!validatePassword) {
-            throw new UnauthorizedException('비밀번호가 맞지 않습니다.');
-        }
+  async loginWIthEmail(user: Pick<UsersModel, 'email' | 'password'>) {
+    const foundUser = await this.authenticateWithEmailAndPassword(user);
 
-        return foundUser;
+    return this.loginUser(foundUser);
+  }
+
+  async registerWithEmail(user: RegisterUserDto) {
+    // npmjs.com/package/bcrypt 참고
+    const hash = await bcrypt.hash(
+      user.password,
+      parseInt(this.configService.get<string>(ENV_HASH_ROUNDS_KEY) ?? '10') ??
+        10,
+    );
+
+    const newUser = await this.usersService.createUser({
+      ...user,
+      password: hash,
+    });
+
+    return this.loginUser({
+      email: newUser.email,
+      id: newUser.id,
+    });
+  }
+
+  extractTokenFromHeader(header: string, isBearer: boolean) {
+    const splitToken = header.split(' ');
+    const prefix = isBearer ? 'Bearer' : 'Basic';
+    if (splitToken.length !== 2 || splitToken[0] !== prefix) {
+      throw new UnauthorizedException('Invalid token!');
+    }
+    return splitToken[1];
+  }
+
+  decodeBasicToken(token: string) {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const splitToken = decoded.split(':');
+    if (splitToken.length !== 2) {
+      throw new UnauthorizedException('Invalid token!');
+    }
+    return { email: splitToken[0], password: splitToken[1] };
+  }
+
+  // 토큰 검증
+  verifyToken(token: string) {
+    try {
+      return this.jwtService.verify(token, {
+        secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
+      });
+    } catch (error) {
+      throw new UnauthorizedException('토큰이 만료되었거나 유효하지 않습니다.');
+    }
+  }
+
+  rotateToken(token: string, isRefreshToken: boolean) {
+    const decoded = this.jwtService.verify(token, {
+      secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
+    });
+
+    if (decoded.type !== 'refresh') {
+      throw new UnauthorizedException(
+        '토큰 재발급은 Refresh Token만 가능합니다.',
+      );
     }
 
-    async loginWIthEmail(user: Pick<UsersModel, 'email' | 'password'>) {
-        const foundUser = await this.authenticateWithEmailAndPassword(user);
-        
-        return this.loginUser(foundUser);
-    }
-
-    async registerWithEmail(user: RegisterUserDto) {
-        // npmjs.com/package/bcrypt 참고
-        const hash = await bcrypt.hash(
-            user.password, 
-            parseInt(this.configService.get<string>(ENV_HASH_ROUNDS_KEY) ?? '10') ?? 10
-        );    
-
-        const newUser = await this.usersService.createUser({
-            ...user,
-            password: hash,
-        });
-
-        return this.loginUser({
-            email: newUser.email,
-            id: newUser.id,
-        });
-    }
-
-    extractTokenFromHeader(header: string, isBearer: boolean){
-        const splitToken = header.split(' ');
-        const prefix = isBearer ? 'Bearer' : 'Basic';
-        if(splitToken.length !== 2 || splitToken[0] !== prefix){
-            throw new UnauthorizedException('Invalid token!');
-        }
-        return splitToken[1];
-    }
-
-    decodeBasicToken(token: string){
-        const decoded = Buffer.from(token, 'base64').toString('utf-8');
-        const splitToken = decoded.split(':');
-        if (splitToken.length !== 2){
-            throw new UnauthorizedException('Invalid token!');
-        }
-        return { email: splitToken[0], password: splitToken[1] };
-    }
-
-    // 토큰 검증
-    verifyToken(token: string){
-        try {
-            return this.jwtService.verify(token, {
-                secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
-            });
-        } catch (error) {
-            throw new UnauthorizedException('토큰이 만료되었거나 유효하지 않습니다.');
-        }
-    }
-
-    rotateToken(token: string, isRefreshToken: boolean){
-        const decoded = this.jwtService.verify(token, {
-            secret: this.configService.get<string>(ENV_JWT_SECRET_KEY),
-        });
-
-        if(decoded.type !== 'refresh'){
-            throw new UnauthorizedException('토큰 재발급은 Refresh Token만 가능합니다.');
-        }
-
-        return this.signToken({
-            ...decoded,
-        }, isRefreshToken);
-    }
-
+    return this.signToken(
+      {
+        ...decoded,
+      },
+      isRefreshToken,
+    );
+  }
 }

@@ -1,4 +1,11 @@
-import { ClassSerializerInterceptor, MiddlewareConsumer, Module, NestMiddleware, NestModule, RequestMethod } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  MiddlewareConsumer,
+  Module,
+  NestMiddleware,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
@@ -14,7 +21,13 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './common/common.module';
 
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { ENV_DB_HOST_KEY, ENV_DB_PORT_KEY, ENV_DB_USERNAME_KEY, ENV_DB_PASSWORD_KEY, ENV_DB_DATABASE_KEY } from './common/const/env-keys.const';
+import {
+  ENV_DB_HOST_KEY,
+  ENV_DB_PORT_KEY,
+  ENV_DB_USERNAME_KEY,
+  ENV_DB_PASSWORD_KEY,
+  ENV_DB_DATABASE_KEY,
+} from './common/const/env-keys.const';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { PUBLIC_DIRECTORY_PATH } from './common/const/path.const';
 import { LogMiddleware } from './common/middleware/log.middleware';
@@ -63,7 +76,8 @@ import { UserFollowersModel } from './users/entity/user-followers.entity';
     CommentsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, 
+  providers: [
+    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
@@ -75,23 +89,21 @@ import { UserFollowersModel } from './users/entity/user-followers.entity';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
-    }
+    },
   ],
 })
-export class AppModule implements NestModule{
+export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(
-      LogMiddleware,
-    ).forRoutes({
+    consumer.apply(LogMiddleware).forRoutes({
       path: '*',
-      method: RequestMethod.ALL
+      method: RequestMethod.ALL,
     });
   }
 }
 
 /**
-   * serialization -> 직렬화 -> 현재 시스템에서 사용되는 (Nest JS) 데이터의 구조를 다른 시스템에서도
-   *                          쉽게 사용할 수 있는 포맷으로 변환
-   *                          -> class의 object에서 JSON 포맷으로 변환
-   * deserialization -> 역직렬화 -> JSON 포맷을 다시 class의 object로 변환
-   */
+ * serialization -> 직렬화 -> 현재 시스템에서 사용되는 (Nest JS) 데이터의 구조를 다른 시스템에서도
+ *                          쉽게 사용할 수 있는 포맷으로 변환
+ *                          -> class의 object에서 JSON 포맷으로 변환
+ * deserialization -> 역직렬화 -> JSON 포맷을 다시 class의 object로 변환
+ */

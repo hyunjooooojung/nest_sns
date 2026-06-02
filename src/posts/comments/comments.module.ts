@@ -11,9 +11,7 @@ import { PostsModule } from '../posts.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      CommentsModel,
-    ]),
+    TypeOrmModule.forFeature([CommentsModel]),
     CommonModule,
     AuthModule,
     UsersModule,
@@ -24,8 +22,6 @@ import { PostsModule } from '../posts.module';
 })
 export class CommentsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-    .apply(PostExistsMiddleware)
-    .forRoutes(CommentsController);
+    consumer.apply(PostExistsMiddleware).forRoutes(CommentsController);
   }
 }

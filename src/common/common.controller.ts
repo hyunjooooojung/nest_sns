@@ -1,4 +1,10 @@
-import { Controller, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CommonService } from './common.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
@@ -13,12 +19,9 @@ export class CommonController {
 
   @Post('image')
   @UseInterceptors(FileInterceptor('image'))
-  postImage(
-    @UploadedFile() file: Express.Multer.File,
-  ){
+  postImage(@UploadedFile() file: Express.Multer.File) {
     return {
-      filename: file.filename
-    }
+      filename: file.filename,
+    };
   }
-
 }

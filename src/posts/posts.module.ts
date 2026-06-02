@@ -10,17 +10,13 @@ import { ImagesModel } from 'src/common/entity/image.entity';
 import { PostImagesService } from './image/images.service';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      PostsModel,
-      ImagesModel,
-    ]),
+    TypeOrmModule.forFeature([PostsModel, ImagesModel]),
     AuthModule,
     UsersModule,
     CommonModule,
-    
   ],
   controllers: [PostsController],
   providers: [PostsService, PostImagesService],
-  exports: [PostsService]
+  exports: [PostsService],
 })
 export class PostsModule {}

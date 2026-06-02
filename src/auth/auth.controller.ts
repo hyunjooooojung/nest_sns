@@ -1,6 +1,17 @@
-import { Body, Controller, Headers, Post, Request, UseGuards } from '@nestjs/common'; // Headers는 token/access, token/refresh에서 사용
+import {
+  Body,
+  Controller,
+  Headers,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common'; // Headers는 token/access, token/refresh에서 사용
 import { AuthService } from './auth.service';
-import { MaxLengthPipe, MinLengthPipe, PasswordPipe } from './pipe/password.pipe';
+import {
+  MaxLengthPipe,
+  MinLengthPipe,
+  PasswordPipe,
+} from './pipe/password.pipe';
 import { BasicTokenGuard } from './guard/basic-token.guard';
 import { RefreshTokenGuard } from './guard/bearer-token.guard';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -13,28 +24,26 @@ export class AuthController {
   @Post('token/access')
   @IsPublic()
   @UseGuards(RefreshTokenGuard)
-  rotateAccessToken(
-    @Headers('authorization') rawToken: string) {
-      const token = this.authService.extractTokenFromHeader(rawToken, true);
+  rotateAccessToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
 
-      const newToken = this.authService.rotateToken(token, false);
-      return {
-        accessToken: newToken,
-      }
-    }
-  
+    const newToken = this.authService.rotateToken(token, false);
+    return {
+      accessToken: newToken,
+    };
+  }
+
   @Post('token/refresh')
   @IsPublic()
   @UseGuards(RefreshTokenGuard)
-  rotateRefreshToken(
-    @Headers('authorization') rawToken: string) {
-      const token = this.authService.extractTokenFromHeader(rawToken, true);
+  rotateRefreshToken(@Headers('authorization') rawToken: string) {
+    const token = this.authService.extractTokenFromHeader(rawToken, true);
 
-      const newToken = this.authService.rotateToken(token, true);
-      return {
-        refreshToken: newToken,
-      }
-    }
+    const newToken = this.authService.rotateToken(token, true);
+    return {
+      refreshToken: newToken,
+    };
+  }
 
   /**
    * [로그인 방식 비교]
@@ -61,9 +70,7 @@ export class AuthController {
    */
   @Post('login')
   @IsPublic()
-  loginWithEmail(
-    @Body() body: { email: string, password: string },
-  ){
+  loginWithEmail(@Body() body: { email: string; password: string }) {
     return this.authService.loginWIthEmail({
       email: body.email,
       password: body.password,
@@ -72,9 +79,7 @@ export class AuthController {
 
   @Post('register')
   @IsPublic()
-  registerWithEmail(
-    @Body() body: RegisterUserDto
-  ) {
+  registerWithEmail(@Body() body: RegisterUserDto) {
     return this.authService.registerWithEmail(body);
   }
 }

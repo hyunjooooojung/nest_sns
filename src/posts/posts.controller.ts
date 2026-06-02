@@ -1,4 +1,20 @@
-import { Body, Controller, Get, Delete,Param, Patch, Post, ParseIntPipe, UseGuards, Query, UseInterceptors, UploadedFile, InternalServerErrorException, UseFilters, BadRequestException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Delete,
+  Param,
+  Patch,
+  Post,
+  ParseIntPipe,
+  UseGuards,
+  Query,
+  UseInterceptors,
+  UploadedFile,
+  InternalServerErrorException,
+  UseFilters,
+  BadRequestException,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsModel } from './entity/posts.entity';
 import { AccessTokenGuard } from 'src/auth/guard/bearer-token.guard';
@@ -19,7 +35,6 @@ import { Roles } from 'src/users/decorator/roles.decorator';
 import { RolesEnum } from 'src/users/const/roles.const';
 import { IsPublic } from 'src/common/decorator/is-public.decorator';
 import { IsPostMineOrAdminGuard } from './guard/is-post-mine-or-admin.guard';
-
 
 @Controller('posts')
 export class PostsController {
@@ -54,21 +69,20 @@ export class PostsController {
     @QueryRunner() qr: QR,
   ): Promise<PostsModel> {
     // 게시글 생성
-    const post = await this.postsService.createPost(
-      userId,
-      body,
-      qr,
-    );
+    const post = await this.postsService.createPost(userId, body, qr);
 
     // 이미지 업로드
-    for(let i = 0; i < body.images.length; i++){
-      await this.postImagesService.createPostImage({
-        post,
-        order: i,
-        type: ImageTypeEnum.POST,
-        path: body.images[i],
-      }, qr);
-    };
+    for (let i = 0; i < body.images.length; i++) {
+      await this.postImagesService.createPostImage(
+        {
+          post,
+          order: i,
+          type: ImageTypeEnum.POST,
+          path: body.images[i],
+        },
+        qr,
+      );
+    }
     return this.postsService.getPostById(post.id, qr);
   }
 
@@ -76,15 +90,11 @@ export class PostsController {
   updatePost(
     @Param('id') id: number,
     @Body('authorId') authorId: number,
-    @Body() body: UpdatePostDto
+    @Body() body: UpdatePostDto,
     // @Body('title') title: string,
     // @Body('content') content: string,
   ) {
-    return this.postsService.updatePost(
-      id, 
-      authorId, 
-      body,
-    );
+    return this.postsService.updatePost(id, authorId, body);
   }
 
   @Patch(':postId')
@@ -92,22 +102,16 @@ export class PostsController {
   patchPost(
     @Param('postId', ParseIntPipe) id: number,
     @Body('authorId') authorId: number | undefined,
-    @Body() body: UpdatePostDto
+    @Body() body: UpdatePostDto,
     // @Body('title') title: string | undefined,
     // @Body('content') content: string | undefined,
   ) {
-    return this.postsService.patchPost(
-      id,
-      authorId, 
-      body,
-    );
+    return this.postsService.patchPost(id, authorId, body);
   }
 
   @Delete(':id')
   @Roles(RolesEnum.ADMIN)
   async deletePost(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.postsService.deletePost(
-      id,
-    );
+    return this.postsService.deletePost(id);
   }
 }

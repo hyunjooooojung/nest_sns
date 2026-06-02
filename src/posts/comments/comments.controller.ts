@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseFilters, UseGuards, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { LogInterceptor } from 'src/common/interceptor/log.interceptor';
 import { HttpExceptionFilter } from 'src/common/exception-filter/http.exception-filter';
@@ -16,29 +29,23 @@ import { IsCommentMineOrAdminGuard } from './guard/is-comment-mine-or-admin.guar
 
 @Controller('posts/:postId/comments')
 export class CommentsController {
-  constructor(private readonly commentsService: CommentsService) {
-  }
+  constructor(private readonly commentsService: CommentsService) {}
 
   @Get()
   @IsPublic()
   @UseInterceptors(LogInterceptor)
   @UseFilters(HttpExceptionFilter)
   getComments(
-    @Param('postId', ParseIntPipe) postId: number, 
+    @Param('postId', ParseIntPipe) postId: number,
     @Query() query: PaginateCommentsDto,
   ): Promise<PaginationResult<CommentsModel>> {
-    return this.commentsService.paginateComments(
-      query, 
-      postId
-    );
+    return this.commentsService.paginateComments(query, postId);
   }
 
   @Get(':commentId')
   @IsPublic()
   @UseInterceptors(LogInterceptor)
-  getComment(
-    @Param('commentId', ParseIntPipe) commentId: number
-  ) {
+  getComment(@Param('commentId', ParseIntPipe) commentId: number) {
     return this.commentsService.getCommentById(commentId);
   }
 
@@ -50,11 +57,7 @@ export class CommentsController {
     @Body() body: CreateCommentDto,
   ): Promise<CommentsModel> {
     // 코멘트 생성
-    return this.commentsService.createComment(
-      body,
-      postId,
-      user,
-    );
+    return this.commentsService.createComment(body, postId, user);
   }
 
   @Patch(':commentId')
@@ -64,20 +67,13 @@ export class CommentsController {
     @Param('commentId', ParseIntPipe) commentId: number,
     @Body() body: UpdateCommentDto,
   ) {
-    return this.commentsService.patchComment(
-      body,
-      commentId,
-    )
+    return this.commentsService.patchComment(body, commentId);
   }
 
   @Delete(':commentId')
   @UseGuards(IsCommentMineOrAdminGuard)
   @UseInterceptors(LogInterceptor)
-  deleteComment(
-    @Param('commentId', ParseIntPipe) commentId: number,
-  ) {
-    return this.commentsService.deleteComment(
-      commentId,
-    )
+  deleteComment(@Param('commentId', ParseIntPipe) commentId: number) {
+    return this.commentsService.deleteComment(commentId);
   }
 }

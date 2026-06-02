@@ -1,6 +1,6 @@
-import { PickType } from "@nestjs/mapped-types";
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
-import { PostsModel } from "../entity/posts.entity";
+import { PickType } from '@nestjs/mapped-types';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PostsModel } from '../entity/posts.entity';
 
 // export class CreatePostDto {
 //     @IsString({
@@ -19,9 +19,9 @@ import { PostsModel } from "../entity/posts.entity";
  * PickType, OmitType, PartialType -> 값 반환
  */
 export class CreatePostDto extends PickType(PostsModel, ['title', 'content']) {
-    @IsString({
-        each: true,
-    })
-    @IsOptional()
-    images: string[] = [];
+  @IsString({
+    each: true,
+  })
+  @IsOptional()
+  images: string[] = [];
 }
