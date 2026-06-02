@@ -25,6 +25,7 @@ import { CommentsModule } from './posts/comments/comments.module';
 import { CommentsModel } from './posts/comments/entity/comments.entity';
 import { RolesGuard } from './users/guard/roles.guard';
 import { AccessTokenGuard } from './auth/guard/bearer-token.guard';
+import { UserFollowersModel } from './users/entity/user-followers.entity';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AccessTokenGuard } from './auth/guard/bearer-token.guard';
         ChatsModel,
         MessagesModel,
         CommentsModel,
+        UserFollowersModel,
       ],
       synchronize: true, // development 환경에서만 사용, production 환경에서는 false로 설정
     }),
