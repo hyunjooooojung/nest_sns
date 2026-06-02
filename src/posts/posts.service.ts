@@ -17,13 +17,6 @@ import {
   ENV_HOST_KEY,
   ENV_PORT_KEY,
 } from 'src/common/const/env-keys.const';
-import {
-  POSTS_IMAGE_PATH,
-  TEMP_DIRECTORY_PATH,
-} from 'src/common/const/path.const';
-import path, { join } from 'path';
-import { promises } from 'fs';
-import { CreatePostImageDto } from './image/dto/create-image.dto';
 import { ImagesModel } from 'src/common/entity/image.entity';
 import { DEFAULT_POST_FIND_OPTIONS } from './const/default-post-find-options.const';
 import { QueryRunner } from 'typeorm/browser';
@@ -172,6 +165,18 @@ export class PostsService {
       throw new NotFoundException('Post not found');
     }
     return post;
+  }
+
+  async incrementCommentCount(postId: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    await repository.increment({ id: postId }, 'commentCount', 1);
+  }
+
+  async decrementCommentCount(postId: number, qr?: QueryRunner) {
+    const repository = this.getRepository(qr);
+
+    await repository.decrement({ id: postId }, 'commentCount', 1);
   }
 
   async createPost(
